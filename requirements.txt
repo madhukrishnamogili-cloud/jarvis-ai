@@ -1,2 +1,3 @@
+flask
 google-genai
-streamlit-mic-recorder
+python-dotenv
