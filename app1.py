@@ -11,7 +11,7 @@ import json
 # =====================================
 
 st.set_page_config(
-    page_title="JARVIS AI",
+    page_title="🤖⚡ JARVIS",
     page_icon="🤖",
     layout="wide"
 )
@@ -27,11 +27,7 @@ try:
     )
 
 except Exception:
-
-    st.error(
-        "❌ GEMINI_API_KEY not found. Check Streamlit Secrets."
-    )
-
+    st.error("❌ GEMINI_API_KEY not found. Check Streamlit Secrets.")
     st.stop()
 
 
@@ -75,8 +71,20 @@ st.markdown("""
 # =====================================
 
 if "messages" not in st.session_state:
-
     st.session_state.messages = []
+
+
+# =====================================
+# AUTO DETECT LANGUAGE
+# =====================================
+
+def detect_language(text):
+
+    for char in text:
+        if "\u0C00" <= char <= "\u0C7F":
+            return "te-IN"
+
+    return "en-US"
 
 
 # =====================================
@@ -85,10 +93,11 @@ if "messages" not in st.session_state:
 
 def speak(text):
 
+    language = detect_language(text)
+
     clean_text = json.dumps(text)
 
     components.html(
-
         f"""
         <script>
 
@@ -96,20 +105,17 @@ def speak(text):
             {clean_text}
         );
 
+        speech.lang = "{language}";
         speech.rate = 1;
         speech.pitch = 1;
 
         window.speechSynthesis.cancel();
 
-        window.speechSynthesis.speak(
-            speech
-        );
+        window.speechSynthesis.speak(speech);
 
         </script>
         """,
-
-        height=0,
-
+        height=0
     )
 
 
@@ -119,12 +125,11 @@ def speak(text):
 
 with st.sidebar:
 
-    st.title("🤖 JARVIS")
+    st.title("🤖⚡ JARVIS")
 
     st.write("### Personal AI Assistant")
 
     st.divider()
-
 
     if st.button("🗑️ Clear Chat"):
 
@@ -132,15 +137,13 @@ with st.sidebar:
 
         st.rerun()
 
-
     st.divider()
-
 
     st.success("🟢 JARVIS ONLINE")
 
     st.write("🧠 AI Brain: Gemini")
 
-    st.write("🎤 Voice Input: Active")
+    st.write("🎤 Voice: Telugu + English")
 
     st.write("🔊 Voice Output: Active")
 
@@ -152,22 +155,13 @@ with st.sidebar:
 # =====================================
 
 st.markdown(
-
-    '<div class="jarvis-title">🤖 JARVIS</div>',
-
+    '<div class="jarvis-title">🤖⚡ JARVIS</div>',
     unsafe_allow_html=True
-
 )
 
-
 st.markdown(
-
-    '<div class="subtitle">'
-    'Your Personal AI Assistant'
-    '</div>',
-
+    '<div class="subtitle">Your Personal AI Assistant</div>',
     unsafe_allow_html=True
-
 )
 
 
@@ -175,21 +169,12 @@ st.markdown(
 # SYSTEM TIME
 # =====================================
 
-current_time = datetime.now().strftime(
-    "%I:%M %p"
-)
-
+current_time = datetime.now().strftime("%I:%M %p")
 
 st.markdown(
-
-    f'<div class="subtitle">'
-    f'System Time: {current_time}'
-    f'</div>',
-
+    f'<div class="subtitle">System Time: {current_time}</div>',
     unsafe_allow_html=True
-
 )
-
 
 st.divider()
 
@@ -200,13 +185,9 @@ st.divider()
 
 for message in st.session_state.messages:
 
-    with st.chat_message(
-        message["role"]
-    ):
+    with st.chat_message(message["role"]):
 
-        st.markdown(
-            message["content"]
-        )
+        st.markdown(message["content"])
 
 
 # =====================================
@@ -215,9 +196,20 @@ for message in st.session_state.messages:
 
 st.markdown("### 🎤 Speak to JARVIS")
 
+voice_language = st.selectbox(
+    "Select Voice Language",
+    ["Telugu 🇮🇳", "English 🇺🇸"]
+)
+
+if voice_language == "Telugu 🇮🇳":
+    voice_code = "te-IN"
+else:
+    voice_code = "en-US"
+
+
 voice_text = speech_to_text(
 
-    language="en",
+    language=voice_code,
 
     start_prompt="🎤 Start Speaking",
 
@@ -237,9 +229,7 @@ voice_text = speech_to_text(
 # =====================================
 
 text_input = st.chat_input(
-
     "Type your message to JARVIS..."
-
 )
 
 
@@ -249,14 +239,10 @@ text_input = st.chat_input(
 
 user_input = None
 
-
 if voice_text:
-
     user_input = voice_text
 
-
 elif text_input:
-
     user_input = text_input
 
 
@@ -266,51 +252,29 @@ elif text_input:
 
 if user_input:
 
-
-    # -----------------------------
     # SAVE USER MESSAGE
-    # -----------------------------
 
     st.session_state.messages.append(
-
         {
-
             "role": "user",
-
             "content": user_input
-
         }
-
     )
 
 
-    # -----------------------------
     # DISPLAY USER MESSAGE
-    # -----------------------------
 
     with st.chat_message("user"):
-
-        st.markdown(
-            user_input
-        )
+        st.markdown(user_input)
 
 
-    # -----------------------------
-    # JARVIS THINKING
-    # -----------------------------
+    # JARVIS RESPONSE
 
     with st.chat_message("assistant"):
 
-
-        with st.spinner(
-
-            "JARVIS is thinking... 🤖"
-
-        ):
-
+        with st.spinner("JARVIS is thinking... 🤖⚡"):
 
             try:
-
 
                 prompt = f"""
 
@@ -322,21 +286,22 @@ Your personality:
 - Intelligent
 - Helpful
 - Professional
-- Speak Telugu when the user speaks Telugu
-- Speak English when the user speaks English
-- You may naturally call the user "bro"
-- Explain difficult topics simply
-- Give clear and useful answers
-- Your name is JARVIS
+
+Language Rules:
+
+- If the user speaks Telugu, reply in Telugu.
+- If the user speaks English, reply in English.
+- Telugu responses should use Telugu script.
+- Explain difficult topics simply.
+- You may naturally call the user "bro".
+- Your name is JARVIS.
 
 Keep responses natural and conversational.
 
 User:
-
 {user_input}
 
 """
-
 
                 response = client.models.generate_content(
 
@@ -346,50 +311,32 @@ User:
 
                 )
 
-
                 answer = response.text
 
 
             except Exception as e:
 
-
                 answer = (
-
                     "⚠️ JARVIS Error:\n\n"
-
                     + str(e)
-
                 )
 
 
-        # -----------------------------
         # DISPLAY ANSWER
-        # -----------------------------
 
-        st.markdown(
-            answer
-        )
+        st.markdown(answer)
 
 
-        # -----------------------------
         # VOICE OUTPUT
-        # -----------------------------
 
         speak(answer)
 
 
-    # -----------------------------
     # SAVE JARVIS RESPONSE
-    # -----------------------------
 
     st.session_state.messages.append(
-
         {
-
             "role": "assistant",
-
             "content": answer
-
         }
-
     )
